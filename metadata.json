@@ -1,0 +1,5 @@
+{
+  "name": "Sales Companion for Tourism",
+  "description": "An application for sales teams in the tourism industry to manage client information, track plan usage history, and browse new plans for hotels and tour guides. Features multilingual support (EN/JA) and allows adding/editing client data and usage history.",
+  "requestFramePermissions": []
+}
