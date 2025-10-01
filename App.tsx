@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getClients, getPlans, getClientHistory, getClientMemos, addMemo as apiAddMemo, updateMemo as apiUpdateMemo, deleteMemo as apiDeleteMemo, saveClient as apiSaveClient, addHistory as apiAddHistory, savePlan as apiSavePlan, getCountries, addCountry as apiAddCountry, getAllMemos, bulkAddClients as apiBulkAddClients, deleteClient as apiDeleteClient } from './services/api';
 import type { Mode, Client, Plan, HistoryItem, Memo } from './types';
 import Header from './components/Header';
@@ -6,7 +6,6 @@ import ClientList from './components/ClientList';
 import ClientDetail from './components/ClientDetail';
 import PlanCatalog from './components/PlanCatalog';
 import ClientFormModal from './components/ClientFormModal';
-import ConfirmDeleteModal from './components/ConfirmDeleteModal';
 import HistoryFormModal from './components/HistoryFormModal';
 import PlanFormModal from './components/PlanFormModal';
 import CountryStrengthFormModal from './components/CountryStrengthFormModal';
@@ -36,10 +35,6 @@ const App: React.FC = () => {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [isCountryStrengthModalOpen, setIsCountryStrengthModalOpen] = useState(false);
   const [isCsvHelpModalOpen, setIsCsvHelpModalOpen] = useState(false);
-  const [clientPendingDeletion, setClientPendingDeletion] = useState<Client | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDeletingClient, setIsDeletingClient] = useState(false);
-
 
   const fetchAllClients = useCallback(async () => {
     try {
@@ -219,32 +214,20 @@ const App: React.FC = () => {
     setIsPlanModalOpen(true);
   }
 
-  const handlePromptDeleteClient = (client: Client) => {
-    setClientPendingDeletion(client);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleCancelDeleteClient = () => {
-    if (isDeletingClient) return;
-    setIsDeleteModalOpen(false);
-    setClientPendingDeletion(null);
-  };
-
-  const handleConfirmDeleteClient = async () => {
-    if (!clientPendingDeletion) return;
+  const handleDeleteClient = async (client: Client) => {
+    const confirmed = window.confirm(t('deleteClientDescription', { name: client.name[language] }));
+    if (!confirmed) return;
     try {
-      setIsDeletingClient(true);
-      await apiDeleteClient(clientPendingDeletion.id);
-      await handleSelectClient(null);
+      setIsLoading(true);
+      await apiDeleteClient(client.id);
+      setSelectedClient(null);
       await fetchAllClients();
       alert(t('deleteClientSuccess'));
     } catch (error) {
-      console.error("Failed to delete client:", error);
+      console.error('Failed to delete client:', error);
       alert(t('deleteClientError'));
     } finally {
-      setIsDeletingClient(false);
-      setIsDeleteModalOpen(false);
-      setClientPendingDeletion(null);
+      setIsLoading(false);
     }
   };
 
@@ -366,11 +349,14 @@ const App: React.FC = () => {
             mode={mode}
             isLoading={isLoading && !!selectedClient}
             onAddMemo={addMemo}
+            onUpdateMemo={handleUpdateMemo}
+            onDeleteMemo={handleDeleteMemo}
             onOpenCatalog={() => setIsCatalogOpen(true)}
             onEditClient={() => handleOpenClientModal(selectedClient)}
             onEditCountryStrengths={() => setIsCountryStrengthModalOpen(true)}
             onAddHistory={() => setIsHistoryModalOpen(true)}
             onBack={() => handleSelectClient(null)}
+            onDeleteClient={handleDeleteClient}
           />
         </section>
       </main>
@@ -420,15 +406,6 @@ const App: React.FC = () => {
           onAddCountry={handleAddCountry}
         />
       )}
-      {isDeleteModalOpen && (
-        <ConfirmDeleteModal
-          isOpen={isDeleteModalOpen}
-          clientName={clientPendingDeletion ? clientPendingDeletion.name[language] : undefined}
-          isDeleting={isDeletingClient}
-          onCancel={handleCancelDeleteClient}
-          onConfirm={handleConfirmDeleteClient}
-        />
-      )}
       {isCsvHelpModalOpen && (
         <CsvHelpModal 
           isOpen={isCsvHelpModalOpen}
@@ -440,5 +417,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-

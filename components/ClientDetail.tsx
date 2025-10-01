@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState } from 'react';
 import type { Client, HistoryItem, Memo, Plan, Mode } from '../types';
 import MemoInput from './MemoInput';
@@ -20,7 +20,7 @@ interface ClientDetailProps {
   onEditCountryStrengths: () => void;
   onAddHistory: () => void;
   onBack: () => void;
-  onDeleteClient: () => void;
+  onDeleteClient: (client: Client) => Promise<void>;
 }
 
 
@@ -146,7 +146,7 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ client, history, memos, pla
             <PlusIcon className="w-5 h-5"/>
             {t('proposeNewPlan')}
           </button>
-          <button type="button" onClick={onDeleteClient} className="flex items-center gap-2 bg-white text-red-600 font-semibold px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-colors shadow-sm">
+          <button type="button" onClick={() => onDeleteClient(client)} className="flex items-center gap-2 bg-white text-red-600 font-semibold px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-colors shadow-sm">
             <TrashIcon className="w-5 h-5" />
             {t('deleteClient')}
           </button>
@@ -312,8 +312,3 @@ const ClientDetail: React.FC<ClientDetailProps> = ({ client, history, memos, pla
 };
 
 export default ClientDetail;
-
-
-
-
-
